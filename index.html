@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Toolbars with Dynamic Content and Active Button Highlighting</title>
+    <style>
+        /* Basic body styling */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif, American Typewriter;
+        }
+
+        /* Style for the top toolbar */
+        .top-toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #d0edf5; /* Toolbar background color */
+            color: black;
+            text-align: center;
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-evenly; /* Evenly space the buttons */
+            align-items: center;
+            height: 50px;
+        }
+
+        /* Style for the bottom toolbar */
+        .bottom-toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #d0edf5; /* Toolbar background color */
+            color: white;
+            text-align: center;
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-evenly; /* Evenly space the buttons */
+            align-items: center;
+            height: 50px;
+        }
+
+        /* Remove the underline from the links in the bottom toolbar */
+        .bottom-toolbar a {
+            text-decoration: none; /* Remove underline from anchor tags */
+        }
+
+       /* Content area with scrolling enabled */
+        .content {
+            background-color: white;
+            margin-bottom: 70px;  /* To leave space for the fixed bottom toolbar */
+            position: relative;
+            top: 70px;
+            overflow-y: auto;  /* Allow vertical scrolling */
+            height: calc(100vh - 140px);  /* Full viewport height minus the height of the top and bottom toolbars */
+        }
+
+        /* Style for the buttons in the toolbars */
+        .toolbar-btn {
+            background-color: transparent; /* Make the button background transparent */
+            color: black; /* Default text color */
+            border: none; /* Remove border */
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: color 0.3s ease; /* Smooth transition for text color */
+            flex: 1; /* Make each button take up equal space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "American Typewriter", serif;
+            font-weight: bold;
+
+        }
+
+
+        /* Style for the image inside the bottom toolbar */
+        .bottom-toolbar img {
+            position: absolute; /* Absolute position to the left side */
+            top: 0; /* Align to the top of the toolbar */
+            left: 0; /* Align to the left side of the toolbar */
+            height: 100%; /* Make sure the image spans the full height of the toolbar */
+            width: auto; /* Maintain the aspect ratio */
+            object-fit: cover; /* Ensure the image covers the area without distortion */
+        }
+
+        /* Change text color on hover */
+        .toolbar-btn:hover {
+            color: #FFD700; /* Change text color to gold on hover */
+        }
+
+        /* Change background color of the clicked button (only for top toolbar) */
+        .top-toolbar .toolbar-btn.active {
+            background-color: white;
+            color: black; /* Change text color to black when active */
+        }
+
+        /* Add space between the image and the name of the button when active */
+        .top-toolbar .toolbar-btn.active img {
+            margin-right: 8px; /* Adds space between the image and the text */
+        }
+
+        /* Optional: Styling the content for better visibility */
+        .content p {
+            line-height: 1.6;
+            font-family: "Charter", serif;
+        }
+
+        .slideshow-container {
+            position: absolute;
+            padding: 20px;   /* Closer to the top (smaller value) */
+            left: 1in; /* Farther from the left (larger value) */
+            width: 400px;  /* Square size */
+            height: 400px; /* Square size */
+            margin: auto;
+            overflow: hidden;
+            border: 0px solid #ccc;  /* Optional border around the slideshow */
+            margin-top: 10px; /* Add space between the top toolbar and the slideshow */
+            top: 0px;
+        }   
+
+        /* Style for the slideshow images */
+        .mySlides img {
+            width: 100%; /* Make the image fill the width of the container */
+            height: 100%; /* Make the image fill the height of the container */
+            object-fit: cover; /* Ensure the image covers the entire area of the container without distortion */
+            margin: 0; /* Remove margin around the image */
+            padding: 0;
+        }
+
+
+
+        /* Hide all images */
+        .mySlides {
+            display: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0; /* Ensure no margin around the container */
+            padding: 0;
+        }
+
+        /* Navigation dots style */
+        .dot-container {
+            text-align: center;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+        }
+
+        .dot {
+            height: 15px;
+            width: 15px;
+            margin: 0 2px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.6s ease;
+        }
+
+        .active {
+            background-color: #717171;
+        }
+
+
+        /* Box with blue border on the right side */
+        .blue-box {
+            position: absolute;
+            right: 1.55in; /* Position it on the right side, adjust as necessary */
+            top: .5 in;   /* Adjust vertical position as needed */
+            width: 400px;  /* Set the box width */
+            height: 500px; /* Set the box height */
+            border: 5px solid black; /* Thicker blue border */
+            padding: 42px; /* Padding inside the box */
+            background-color: white; /* White background inside the box */
+            box-sizing: border-box; /* Include padding and border in the total width/height */
+        }
+
+        .blue-box p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Line under the blue box */
+        .line {
+            position: absolute;
+            top: 490px; /* Set the top position after the blue box */
+            left: 1.5in;  /* Start after 1.5 inches from the left */
+            width: calc(100% - 3in); /* Subtract 1.5 inches from both sides */
+            border-top: 5px solid black;  /* The line style */
+        }
+
+        /* Background Purple after the line */
+        .purple-background {
+            position: relitive;
+            top: 495px; /* Place it right after the line */
+            left: 0;
+            width: 100%;
+            height: calc(100% - .5in);
+            background-color: #8c93c3; /* Purple background */
+            z-index: 30; /* Ensure the background stays behind the toolbars */
+            transition: height 0.1s ease-in-out; /* Smooth transition for height change */
+            min-height: 100%;
+        }
+                /* Default layout for larger screens (Desktop) */
+        @media screen and (min-width: 768px) {
+            /* Keep slideshow on the left and blue box on the right */
+            .slideshow-container {
+                left: 1.5in;
+                top: 10px;
+            }
+
+            .blue-box {
+                position: centered;
+                right: 1.55in;
+                top: 0in;
+                width: 400px;
+                height: 500px;
+            }
+
+            /* Optional: Adjust blue box height to match content height */
+            .line {
+                position: absolute;
+                top: 490px;
+                left: 0in;
+                width: 100%;
+                border-top: 5px solid black;
+            }
+
+            .purple-background {
+                position: absolute;
+                top: 495px;
+                left: 0;
+                width: 100%;
+                height: 1900vh;
+                background-color: #8c93c3;
+            }
+        }
+
+        /* For smaller screens (Mobile phones) */
+        @media screen and (max-width: 767px) {
+            /* Stack the slideshow on top of the blue box */
+            .slideshow-container {
+                position: relative;
+                width: 100%;
+                height: 500px; /* Adjust the height of slideshow for mobile */
+                top: 0;
+                margin: 0 auto; /* Center the slideshow */
+            }
+
+            .blue-box {
+                position: relative;
+                margin-top: 20px; /* Add space between the slideshow and the blue box */
+                width: 100%; /* Set the blue box width to 100% on mobile */
+                height: auto; /* Auto-adjust the height */
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            /* Stack the left and right images vertically on smaller screens */
+            .left-images,
+            .right-images {
+                flex-direction: row; /* Make left and right images appear horizontally */
+                position: relative;
+                top: auto; /* Remove absolute positioning */
+                width: 100%; /* Allow images to fill the available width */
+            }
+
+            .left-image, .right-image {
+                width: 100%; /* Make images take full width on mobile */
+                height: auto; /* Maintain aspect ratio */
+            }
+        }
+
+       .centered-image {
+            text-align: center;
+            margin-top: 40vh;  /* Space between the other content and the centered image */
+            margin-bottom: 0px; /* Space after the centered image */
+            position: relative;
+            bottom: 0;  /* Push it to the bottom */
+            z-index: 999;
+        }
+
+        .centered-image img {
+            width: 100%;  /* Make the image take up the full width */
+            height: auto;  /* Maintain aspect ratio */
+            display: block;  /* Ensure the image behaves like a block element */
+            max-width: 100%; /* Ensure the image doesn't exceed the container's width */
+            z-index: 999;
+        }
+
+        /* Add this CSS for the centered images */
+        .project-images-container {
+            position: relative;
+            top: 55vh; /* 2-inch gap from the top */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Center images horizontally */
+            gap: 0px; /* Gap between the images */
+            padding-top: 20px; /* Optional padding to add some space above the images */
+            z-index: 100;
+
+        }
+
+        .project-image {
+            width: calc(100% - 3in);/* Adjust the width of each image */
+            height: auto; /* Adjust the height of each image */
+            object-fit: cover; /* Ensure the images cover the designated area without distortion */
+            z-index: 100;
+        }
+
+        .text-title p {
+            position: relative;
+            top: 62vh;
+            font-size: 36px;
+            color: black;
+            z-index: 200;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            ont-family: "Charter", serif;
+        }
+        * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            .container {
+              position: relative;
+              min-height: 100vh;
+              background: white;
+            }
+
+            .imgcontainer {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 15px;
+              justify-content: center;
+              padding: 10px;
+            }
+
+            .photo {
+              width: 350px;
+              border: 5px solid black;
+              box-shadow: 0 5px 15px rgba(0, 0, 0, .1);
+              cursor: pointer;
+              background-color: #fff;
+              text-align: center;
+              display: flex;
+              flex-direction: column;
+              margin-bottom: 20px; /* Add space between image blocks */
+            }
+
+            .photo img {
+              width: 100%;
+              height: 250px;
+              object-fit: cover;
+              transition: .2s linear;
+              display: block;
+            }
+
+            .caption-box {
+              background-color: #f8f8f8;
+              border-top: 2px solid black;
+              padding: 12px;
+              font-size: 15px;
+              font-weight: 500;
+              color: #222;
+              text-align: center;
+            }
+
+
+            .photo:hover img {
+              transform: scale(1.05);
+            }
+
+          
+
+            .popup {
+              position: fixed;
+              top: 0;
+              bottom: 0;
+              background: rgba(0, 0, 0, .8);
+              height: 100%;
+              width: 100%;
+              z-index: 100;
+              display: none;
+            }
+
+            .popup img {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              border: 1rem solid #fff;
+              max-width: 90%;
+              max-height: 90%;
+            }
+
+            .popup span {
+              position: absolute;
+              top: 40px;
+              right: 20px;
+              font-size: 40px;
+              font-weight: bolder;
+              color: #fff;
+              cursor: pointer;
+            }
+
+            @media (max-width:768px) {
+              .popup img {
+                width: 95%;
+              }
+            }
+            html, body {
+              height: 100%;
+            }
+            body {
+              margin: 0;
+              font-family: Arial, sans-serif;
+            }
+
+            .up {
+              width: 100%;
+              height: 60px;
+              background-color: #262b65;
+              color: white;
+              display: flex;
+              align-items: center;
+              padding: 0 20px;
+              font-size: 20px;
+              box-sizing: border-box;
+            }
+
+            .ray {
+              display: flex;
+              flex-direction: row;
+              gap: 20px;
+              align-items: flex-start;
+              box-sizing: border-box;
+              height: calc(100vh - 60px); /* fill the space below the top-bar */
+            }
+
+            .a-box {
+              width: 4in;
+              min-width: 4in;
+              height: 5in;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-between;
+              padding: px;
+              box-sizing: border-box;
+            }
+
+            .a-box img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border: 4px solid #262b65;
+            }
+
+            .a-box .text {
+              width: 100%;
+              text-align: left;
+              padding: 20px;
+              font-size: 14px;
+              color: #262b65;
+              padding-top: 5px;
+              ont-family: "Charter", serif;
+            }
+
+            .purbox {
+              flex: 1;
+              background-color: #8c93c3;
+              padding: 20px;
+              font-size: 18px;
+              border: 4px solid #262b65;
+              box-sizing: border-box;
+              min-width: 300px;
+              height: calc(100vh - 60px); /* full height below top bar */
+              overflow-y: auto;
+            }
+
+
+            .gauge {
+              width: 4in;
+              height: 0.5in;
+              display: flex;
+              flex-direction: column;
+              position: relative;
+              margin-bottom: 10px;
+            }
+
+
+            /* Stack layout for small screens */
+            @media (max-width: 768px) {
+              .content-wrapper {
+                flex-direction: column;
+                align-items: center;
+              }
+
+              .image-box, .sub-box {
+                width: 100%;
+                max-width: 600px;
+              }
+
+              .sub-box {
+                min-width: unset;
+              }
+
+              .gauge {
+                width: 100%;
+                max-width: 4in;
+              }
+            }
+    </style>
+</head>
+<body>
+
+    <!-- Top Toolbar with 5 buttons -->
+    <div class="top-toolbar">
+        <button class="toolbar-btn" id="button1" onclick="loadContent('page1', this)">
+            <img src="images/buttonfish.png" alt="Icon 1" class="button-image">
+            Deirdre Neale
+        </button>
+        <button class="toolbar-btn" id="button2" onclick="loadContent('page2', this)">
+             <img src="images/buttonfish.png" alt="Icon 2" class="button-image">
+            Game & Character design
+        </button>
+        <button class="toolbar-btn" id="button3" onclick="loadContent('page3', this)">
+            <img src="images/buttonfish.png" alt="Icon 3" class="button-image">
+            Graphic Design
+        </button>
+        <button class="toolbar-btn" id="button4" onclick="loadContent('page4', this)">
+            <img src="images/buttonfish.png" alt="Icon 4" class="button-image">
+            Other
+        </button>
+        <button class="toolbar-btn" id="button5" onclick="loadContent('page5', this)">
+            <img src="images/buttonfish.png" alt="Icon 5" class="button-image">
+            Contact
+        </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content" id="content">
+        <p>Welcome to the dynamic page! Click on a button to load different content.</p>
+    </div>
+
+    <!-- Bottom Toolbar with 4 buttons and an image -->
+    <div class="bottom-toolbar">
+        <img src="images/eyeball logo.png" alt="Logo">
+        <a href="https://www.instagram.com/lotusdragon15/" target="_blank"><button class="toolbar-btn">Insta</button></a>
+        <a href="https://www.behance.net/deirdreneale" target="_blank"><button class="toolbar-btn">Behance</button></a>
+        <a href="https://acrobat.adobe.com/id/urn:aaid:sc:VA6C2:a72ee2da-63f5-4d8c-a0ae-850e21f8ffc4" target="_blank"><button class="toolbar-btn">Resume</button></a>
+    </div>
+
+    <script>
+        // This function loads content dynamically based on the page identifier passed in
+    function loadContent(page, button) {
+        // Set the content dynamically based on the page
+        let content = document.getElementById('content');
+        let pageContent;
+
+        // Example content for each page
+        switch(page) {
+            case 'page1':
+                pageContent = `
+                <div class="slideshow-container">
+                    <div class="mySlides">
+                        <img src="images/olymp.jpg" alt="olympics" />
+                    </div>
+
+                    <div class="mySlides">
+                        <img src="images/turt.jpg" alt="turtle"/>
+                    </div>
+
+                    <div class="mySlides">
+                        <img src="images/dieline.png/" alt="diline"/>
+                    </div>
+
+                    <div class="dot-container">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+
+
+                <div class="blue-box">
+                    <p>A little bit about me as a designer.</p>
+                    <br>
+                    <p>I love creating stories and charcters in all difrent types of genres. My favorit is definintly fantisy though. I love the creativity and intresting world building the genre provides. </p>
+                    <p>I have been doing graphic design work since i was in highschool. My inseperation was just my love of art and storytelling in the begining.</p>
+                    </br>
+                </div>
+                    
+                <div class="line"></div>
+
+                <div class="purple-background"></div>
+
+                <div class="text-title"> <p>Hot Spot</p></div>
+
+                <div class="project-images-container">
+                    <!-- Place your 24 images here -->
+                    <img src="images/270Final portflllio-01.png" class="project-image" alt="Image 1">
+                    <img src="images/270Final portflllio-02.png" class="project-image" alt="Image 2">
+                    <img src="images/270Final portflllio-03.png" class="project-image" alt="Image 3">
+                    <img src="images/270Final portflllio-04.png" class="project-image" alt="Image 4">
+                    <img src="images/270Final portflllio-05.png" class="project-image" alt="Image 5">
+                    <img src="images/270Final portflllio-06.png" class="project-image" alt="Image 6">
+                    <img src="images/270Final portflllio-07.png" class="project-image" alt="Image 7">
+                    <img src="images/270Final portflllio-08.png" class="project-image" alt="Image 8">
+                    <img src="images/270Final portflllio-10.png" class="project-image" alt="Image 9">
+                    <img src="images/270Final portflllio-11.png" class="project-image" alt="Image 10">
+                    <img src="images/270Final portflllio-12.png" class="project-image" alt="Image 11">
+                    <img src="images/270Final portflllio-13.png" class="project-image" alt="Image 12">
+                    <img src="images/270Final portflllio-14.png" class="project-image" alt="Image 13">
+                    <img src="images/270Final portflllio-15.png" class="project-image" alt="Image 14">
+                    <img src="images/270Final portflllio-16.png" class="project-image" alt="Image 15">
+                    <img src="images/270Final portflllio-17.png" class="project-image" alt="Image 16">
+                    <img src="images/270Final portflllio-18.png" class="project-image" alt="Image 17">
+                    <img src="images/270Final portflllio-19.png" class="project-image" alt="Image 18">
+                    <img src="images/270Final portflllio-20.png" class="project-image" alt="Image 19">
+                    <img src="images/270Final portflllio-21.png" class="project-image" alt="Image 20">
+                    <img src="images/270Final portflllio-22.png" class="project-image" alt="Image 21">
+                    <img src="images/270Final portflllio-23.png" class="project-image" alt="Image 22">
+                    <img src="images/270Final portflllio-24.png" class="project-image" alt="Image 23">
+                    <img src="images/270Final portflllio-25.png" class="project-image" alt="Image 24">
+                </div>
+
+                <div class="centered-image"> <img src="images/end.png" class="centered-image"> </div>
+                `;
+                break;
+            case 'page2':
+                pageContent = `<div class="container">
+                <div class="imgcontainer">
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/12.png" alt="Image One">
+                    <div class="caption-box">
+                      <p>Tittle: Fenn</p>
+                      <p>About the peice: A charrcter design</p>
+                    </div>
+                  </div>
+
+
+                <div class="popup">
+                  <span onclick="hide()">&times;</span>
+                  <img src="" alt="popup">
+                </div>
+              </div>`;
+                break;
+            case 'page3':
+                pageContent = `<div class="container">
+                <div class="imgcontainer">
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/1.png" alt="Image One">
+                    <div class="caption-box">
+                      <p>Tittle: Red Herring</p>
+                      <p>About the peice: This is the final product of a project to redesign red herring.</p>
+                      <a href="https://www.behance.net/gallery/225293299/Red-Herring-Re-design" target="_blank">click here!</a>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/two.jpg" alt="Image Two">
+                    <div class="caption-box">
+                      <p>Tittle: 2024 data poster</p>
+                      <p>About the peice: This is an informatic poster of the swimming and diving in the 2024 olympics.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/three.png" alt="Image Three">
+                    <div class="caption-box">
+                      <p>Tittle: Creative risks cheerios</p>
+                      <p>About the peice: This project was a special edition cerial box with a special sticker inside.</p>
+                      <a href="https://youtu.be/Awp7R576r_g" target="_blank">click here!</a>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/2.png" alt="Image Four">
+                    <div class="caption-box">
+                      <p>Tittle: Undercurrent</p>
+                      <p>About the peice: A project where I made a font specimine book from start to finish.</p>
+                      <a href="https://www.behance.net/gallery/214258943/UnderCurrent-Type-Specimen-Book-Font" target="_blank">click here!</a>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/5.jpg" alt="Image Four Again">
+                    <div class="caption-box">
+                      <p>Tittle: Tokyo Postcard</p>
+                      <p>About the peice: A progect where you design a postcard to portray another countries culture with limited color.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/6.jpg" alt="Still Image Four">
+                    <div class="caption-box">
+                      <p>Tittle: Hide and teeth</p>
+                      <p>About the peice: A project about sympludied lines in storytelling.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="popup">
+                  <span onclick="hide()">&times;</span>
+                  <img src="" alt="popup">
+                </div>
+              </div>`;
+                break;
+            case 'page4':
+                pageContent =   
+                `<div class="container">
+                <div class="imgcontainer">
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/one.png" alt="Image One">
+                    <div class="caption-box">
+                      <p>Tittle: World on my back</p>
+                      <p>About the peice: This mixed media painting shows the human polution that harms marine life.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/7.jpg" alt="Image Two">
+                    <div class="caption-box">
+                      <p>Tittle: Natures Jewlery</p>
+                      <p>About the peice: Jewlery peices designed from nature.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/4.jpg" alt="Image Three">
+                    <div class="caption-box">
+                      <p>Tittle: The time we spent</p>
+                      <p>About the peice: A lost and found obgect sculpture about objects anf there asosiation to time.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/8.jpg" alt="Image Four">
+                    <div class="caption-box">
+                      <p>Tittle: Mapping you</p>
+                      <p>About the peice: A collection with two mixed media paintings using unconventional materials.</p>
+                    </div>
+                  </div>
+
+                  <div class="photo" onmouseover="gallery()">
+                    <img src="images/9.png" alt="Image One">
+                    <div class="caption-box">
+                      <p>Tittle: Habbitat</p>
+                      <p>About the peice: A short animation about we need to stop habbitat destruction.</p>
+                      <a href="https://youtu.be/YHcu0QNSoOE" target="_blank">click here!</a>
+                    </div>
+                  </div>
+
+
+
+
+                <div class="popup">
+                  <span onclick="hide()">&times;</span>
+                  <img src="" alt="popup">
+                </div>
+              </div>`;
+                break;
+            case 'page5':
+                pageContent = `
+                <div class="up">Charcter: Deirdre Neale </div>
+
+                <div class="ray">
+                <div class="a-box">
+                      <img src="images/14.jpg"  alt="Placeholder Image" />
+                      <div class="text">Likes: the ocean, space, magic, fantasy, phcological horror, and learning</div>
+                      <div class="text">Dislikes: Jump scares, tamatos, olives</div>
+                    </div>
+
+
+
+                    <div class="purbox">
+                        <p> Email: Dgraceneale@gmail.com</p>
+                        <p> Phone Number: 980-475-0664 </p>
+                        <p>_ </p>
+                        <p> Attributes:</p>
+                        <p> Loyal</p>
+                        <p> Dedicated</p>
+                        <p> Hardworking</p>
+                        <p> Creative</p>
+                        <p>_ </p>
+                        <p> Skills:</p>
+                        <p> Adobe sweet, Maya moddling, Basic Html, Css, Java, and Javasctipt</p>
+                    </div>
+                  </div>
+
+            `;
+                break;
+            default:
+                pageContent = '<h2>Welcome</h2><p>This is the default content.</p>';
+        }
+
+        // Update the content section with the new content
+        content.innerHTML = pageContent;
+
+        // Highlight the active button in the top toolbar
+        const buttons = document.querySelectorAll('.top-toolbar .toolbar-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            // Hide the image in non-active buttons
+            const img = btn.querySelector('img');
+            if (img) img.style.display = 'none';
+        });
+
+        // Add the 'active' class to the clicked button
+        button.classList.add('active');
+
+        // Display the image next to the clicked button
+        const img = button.querySelector('img');
+        if (img) img.style.display = 'inline-block';
+
+        // Reinitialize the slideshow functionality after content is loaded
+        if (page === 'page1') {
+            initializeSlideshow();  // Reinitialize the slideshow for page1
+        }
+    }
+
+    // Initialize the slideshow functionality
+    function initializeSlideshow() {
+        let slideIndex = 0;
+
+        // Function to show the current slide
+        function showSlide(index) {
+            let slides = document.getElementsByClassName("mySlides");
+            let dots = document.getElementsByClassName("dot");
+
+            // Hide all slides
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+
+            // Remove active class from all dots
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].classList.remove("active");
+            }
+
+            // Show the clicked slide and mark the dot as active
+            slides[index].style.display = "block";
+            dots[index].classList.add("active");
+        }
+
+        // Event listener to handle the slide change when clicked
+        document.querySelector('.slideshow-container').addEventListener('click', function() {
+            slideIndex = (slideIndex + 1) % 3; // Loop through the slides (3 slides in total)
+            showSlide(slideIndex); // Show the next slide
+        });
+
+        // Show the first slide initially
+        showSlide(slideIndex);
+    }
+
+    // Load content for Button 1 on page load
+    window.onload = function() {
+        const button1 = document.getElementById('button1');
+        loadContent('page1', button1); // Load content for Button 1
+    }
+    // Initialize or update slideshow when content changes
+    function initializeSlideshow() {
+        let slideIndex = 0;
+
+        // Function to show the current slide
+        function showSlide(index) {
+            let slides = document.getElementsByClassName("mySlides");
+            let dots = document.getElementsByClassName("dot");
+
+            // Hide all slides
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+
+            // Remove active class from all dots
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].classList.remove("active");
+            }
+
+            // Show the clicked slide and mark the dot as active
+            slides[index].style.display = "block";
+            dots[index].classList.add("active");
+        }
+
+        // Set the first slide initially
+        showSlide(slideIndex);
+
+        // Event listener to handle slide change when clicked
+        document.querySelector('.slideshow-container').addEventListener('click', function () {
+            slideIndex = (slideIndex + 1) % 3; // Loop through the slides (3 slides in total)
+            showSlide(slideIndex); // Show the next slide
+        });
+    }
+    function adjustLayoutOnResize() {
+        // Get the elements
+        const slideshow = document.querySelector('.slideshow-container');
+        const blueBox = document.querySelector('.blue-box');
+
+        // Check if the screen width is less than or equal to 767px (mobile view)
+        if (window.innerWidth <= 767) {
+            applyMobileView();  // Apply mobile view adjustments
+        } else {
+            applyDesktopView();  // Apply desktop view adjustments
+        }
+    }
+
+    // Function to apply the mobile view (adjust styles for mobile)
+    function applyMobileView() {
+        const slideshow = document.querySelector('.slideshow-container');
+        const blueBox = document.querySelector('.blue-box');
+
+        slideshow.style.position = 'relative';
+        slideshow.style.width = '100%';
+        slideshow.style.height = '300px';  // Adjust the height of slideshow for mobile
+        slideshow.style.margin = '0 auto';
+
+        blueBox.style.position = 'relative';
+        blueBox.style.width = '100%';  // Make blue box take full width
+        blueBox.style.height = 'auto';  // Auto-adjust the height for mobile
+        blueBox.style.marginTop = '20px';  // Add space between slideshow and blue box
+    }
+
+    // Function to apply the desktop view (adjust styles for desktop)
+    function applyDesktopView() {
+        const slideshow = document.querySelector('.slideshow-container');
+        const blueBox = document.querySelector('.blue-box');
+
+        slideshow.style.position = 'absolute';
+        slideshow.style.width = '400px';  // Set a fixed width
+        slideshow.style.height = '400px';  // Set a fixed height
+        slideshow.style.margin = 'auto';
+        slideshow.style.top = '20px';
+        slideshow.style.left = '2.3in';  // Set specific left position for desktop
+
+        blueBox.style.position = 'absolute';
+        blueBox.style.width = '400px';  // Set width for the blue box
+        blueBox.style.height = '500px';  // Set height for the blue box
+        blueBox.style.marginTop = '0';
+        blueBox.style.marginLeft = '0';
+    }
+
+       function gallery(){
+            document.querySelectorAll('.imgcontainer img').forEach(photo => {
+            photo.onclick = () => {
+                console.log('click');
+                document.querySelector('.popup').style.display = 'block';
+                document.querySelector('.popup img').src = photo.getAttribute('src');
+            };
+        });
+    }
+     function hide(){
+            document.querySelector('.popup').style.display = 'none';
+    };
+        //
+        // Add event listener to resize event
+        window.addEventListener('resize', adjustLayoutOnResize);
+
+        // Call adjustLayoutOnResize initially to check layout on page load
+        adjustLayoutOnResize();
+    </script>
+</body>
+</html>
+
+
+
+
+
+
